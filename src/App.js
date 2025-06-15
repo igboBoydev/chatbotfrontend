@@ -1,4 +1,7 @@
 import { useState, useRef, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 export default function ChatbotUI() {
   const [messages, setMessages] = useState([]);
@@ -11,6 +14,43 @@ export default function ChatbotUI() {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
   }, [messages, loading]);
+
+
+  // Custom renderers for markdown components
+  const markdownComponents = {
+    code({ node, inline, className, children, ...props }) {
+      const match = /language-(\w+)/.exec(className || "");
+      return !inline && match ? (
+        <SyntaxHighlighter
+          style={oneDark}
+          language={match[1]}
+          PreTag="div"
+          {...props}
+        >
+          {String(children).replace(/\n$/, "")}
+        </SyntaxHighlighter>
+      ) : (
+        <code
+          {...props}
+          style={{
+            backgroundColor: "#f3f4f6",
+            padding: "2px 4px",
+            borderRadius: "4px",
+            fontSize: "0.85em",
+          }}
+        >
+          {children}
+        </code>
+      );
+    },
+    h1: ({ children }) => <h1 className="font-bold text-xl mb-2">{children}</h1>,
+    h2: ({ children }) => <h2 className="font-bold text-lg mb-1">{children}</h2>,
+    h3: ({ children }) => <h3 className="font-bold text-md mb-1">{children}</h3>,
+    ol: ({ children }) => <ol className="list-decimal ml-6">{children}</ol>,
+    ul: ({ children }) => <ul className="list-disc ml-6">{children}</ul>,
+    li: ({ children }) => <li className="mb-1">{children}</li>,
+  };
+
 
   const sendMessage = async () => {
     if (!input.trim()) return;
@@ -47,12 +87,12 @@ export default function ChatbotUI() {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-100">
-      {/* Chat Message Area */}
-      <div className="flex-grow overflow-hidden flex flex-col">
+      {/* Chat Area */}
+      <div className="flex-grow flex flex-col overflow-hidden">
         {messages.length === 0 ? (
           <div className="flex-grow flex items-center justify-center text-gray-500 text-center px-4">
             <div>
-              <p className="mb-4 text-lg">Welcome! Ask me anything.</p>
+              <p className="mb-4 text-lg font-semibold">Welcome! Ask me anything.</p>
               <p className="italic text-sm">Start by typing a question below.</p>
             </div>
           </div>
@@ -67,12 +107,26 @@ export default function ChatbotUI() {
                 className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
               >
                 <div
-                  className={`p-3 rounded-lg whitespace-pre-line break-words max-w-full sm:max-w-[80%] ${msg.sender === "user"
+                  className={`p-3 rounded-lg whitespace-pre-line break-words w-full sm:max-w-[80%] ${msg.sender === "user"
                     ? "bg-blue-100 text-right rounded-tr-none"
                     : "bg-gray-200 text-left rounded-tl-none"
                     }`}
                 >
-                  <p className="text-gray-800">{msg.text}</p>
+                  {msg.sender === "bot" ? (
+                    <div
+                      className={`p-3 rounded-lg whitespace-pre-line break-words max-w-full sm:max-w-[80%] ${msg.sender === "user"
+                        ? "bg-blue-100 text-right rounded-tr-none"
+                        : "bg-gray-200 text-left rounded-tl-none"
+                        }`}
+                    >
+                      <ReactMarkdown components={markdownComponents}>
+                        {msg.text}
+                      </ReactMarkdown>
+                    </div>
+                  ) : (
+                    <p className="text-gray-800">{msg.text}</p>
+                  )}
+
                   {msg.resources?.length > 0 && (
                     <ul className="mt-2 text-sm list-disc list-inside">
                       {msg.resources.map((r, j) => (
@@ -122,7 +176,7 @@ export default function ChatbotUI() {
         )}
       </div>
 
-      {/* Fixed Input Bar */}
+      {/* Input Bar */}
       <div className="w-full px-4 py-3 bg-white border-t flex items-center space-x-2">
         <input
           type="text"
