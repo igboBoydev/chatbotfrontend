@@ -42,6 +42,22 @@ export default function ChatbotUI() {
         </code>
       );
     },
+    h1: ({ node, ...props }) => (
+      <h1 className="text-2xl font-bold mt-4 mb-2" {...props} />
+    ),
+    h2: ({ node, ...props }) => (
+      <h2 className="text-xl font-semibold mt-3 mb-2" {...props} />
+    ),
+    h3: ({ node, ...props }) => (
+      <h3 className="text-lg font-semibold mt-2 mb-1" {...props} />
+    ),
+    ul: ({ node, ...props }) => (
+      <ul className="list-disc list-inside ml-5 my-2" {...props} />
+    ),
+    ol: ({ node, ...props }) => (
+      <ol className="list-decimal list-inside ml-5 my-2" {...props} />
+    ),
+    li: ({ node, ...props }) => <li className="mb-1" {...props} />,
   };
 
   const sendMessage = async () => {
@@ -104,8 +120,7 @@ export default function ChatbotUI() {
             {messages.map((msg, i) => (
               <div
                 key={i}
-                className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"
-                  }`}
+                className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
               >
                 <div
                   className={`relative p-3 rounded-lg whitespace-pre-line break-words w-full sm:max-w-[80%] ${msg.sender === "user"
@@ -152,23 +167,12 @@ export default function ChatbotUI() {
                     </>
                   )}
 
-                  <div
-                    className={`p-3 rounded-lg whitespace-pre-line break-words max-w-full sm:max-w-[80%] ${msg.sender === "user"
-                      ? "bg-blue-100 text-right rounded-tr-none"
-                      : "bg-gray-200 text-left rounded-tl-none"
-                      }`}
-                  >
-                    {msg.sender === "bot" ? (
-                      <ReactMarkdown components={markdownComponents}>
-                        {msg.text}
-                      </ReactMarkdown>
-                    ) : (
-                      <p className="text-gray-800">{msg.text}</p>
-                    )}
-                  </div>
+                  <ReactMarkdown components={markdownComponents}>
+                    {msg.text}
+                  </ReactMarkdown>
 
                   {msg.resources?.length > 0 && (
-                    <ul className="mt-2 text-sm list-disc list-inside">
+                    <ul className="mt-3 text-sm list-disc list-inside">
                       {msg.resources.map((r, j) => (
                         <li key={j}>
                           <a
