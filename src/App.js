@@ -6,7 +6,6 @@ export default function ChatbotUI() {
   const [loading, setLoading] = useState(false);
   const chatContainerRef = useRef(null);
 
-  // Auto scroll to bottom on new messages
   useEffect(() => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
@@ -47,11 +46,11 @@ export default function ChatbotUI() {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-gray-100">
+    <div className="flex flex-col min-h-screen bg-gray-100">
       {/* Chat Message Area */}
-      <div className="flex-grow overflow-hidden">
+      <div className="flex-grow overflow-hidden flex flex-col">
         {messages.length === 0 ? (
-          <div className="h-full flex items-center justify-center text-gray-500 text-center px-4">
+          <div className="flex-grow flex items-center justify-center text-gray-500 text-center px-4">
             <div>
               <p className="mb-4 text-lg">Welcome! Ask me anything.</p>
               <p className="italic text-sm">Start by typing a question below.</p>
@@ -60,7 +59,7 @@ export default function ChatbotUI() {
         ) : (
           <div
             ref={chatContainerRef}
-            className="h-full overflow-y-auto px-4 py-3 space-y-4"
+            className="flex-grow overflow-y-auto px-4 py-3 space-y-4"
           >
             {messages.map((msg, i) => (
               <div
@@ -68,7 +67,7 @@ export default function ChatbotUI() {
                 className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
               >
                 <div
-                  className={`p-3 rounded-lg whitespace-pre-line break-words max-w-[70%] ${msg.sender === "user"
+                  className={`p-3 rounded-lg whitespace-pre-line break-words max-w-full sm:max-w-[80%] ${msg.sender === "user"
                     ? "bg-blue-100 text-right rounded-tr-none"
                     : "bg-gray-200 text-left rounded-tl-none"
                     }`}
@@ -123,7 +122,7 @@ export default function ChatbotUI() {
         )}
       </div>
 
-      {/* Fixed Input at Bottom */}
+      {/* Fixed Input Bar */}
       <div className="w-full px-4 py-3 bg-white border-t flex items-center space-x-2">
         <input
           type="text"
