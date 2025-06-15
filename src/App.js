@@ -8,6 +8,7 @@ export default function ChatbotUI() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const chatContainerRef = useRef(null);
+  const [copiedMessageIndex, setCopiedMessageIndex] = useState(null);
 
   useEffect(() => {
     if (chatContainerRef.current) {
@@ -15,8 +16,6 @@ export default function ChatbotUI() {
     }
   }, [messages, loading]);
 
-
-  // Custom renderers for markdown components
   const markdownComponents = {
     code({ node, inline, className, children, ...props }) {
       const match = /language-(\w+)/.exec(className || "");
@@ -43,14 +42,7 @@ export default function ChatbotUI() {
         </code>
       );
     },
-    h1: ({ children }) => <h1 className="font-bold text-xl mb-2">{children}</h1>,
-    h2: ({ children }) => <h2 className="font-bold text-lg mb-1">{children}</h2>,
-    h3: ({ children }) => <h3 className="font-bold text-md mb-1">{children}</h3>,
-    ol: ({ children }) => <ol className="list-decimal ml-6">{children}</ol>,
-    ul: ({ children }) => <ul className="list-disc ml-6">{children}</ul>,
-    li: ({ children }) => <li className="mb-1">{children}</li>,
   };
-
 
   const sendMessage = async () => {
     if (!input.trim()) return;
@@ -85,6 +77,14 @@ export default function ChatbotUI() {
     if (e.key === "Enter") sendMessage();
   };
 
+  // Copy handler with popup
+  const handleCopy = (text, index) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedMessageIndex(index);
+      setTimeout(() => setCopiedMessageIndex(null), 2000);
+    });
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-100">
       {/* Chat Area */}
@@ -99,33 +99,73 @@ export default function ChatbotUI() {
         ) : (
           <div
             ref={chatContainerRef}
-            className="flex-grow overflow-y-auto px-4 py-3 space-y-4"
+            className="flex-grow overflow-y-auto px-4 py-3 space-y-4 pb-24"
           >
             {messages.map((msg, i) => (
               <div
                 key={i}
-                className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
+                className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"
+                  }`}
               >
                 <div
-                  className={`p-3 rounded-lg whitespace-pre-line break-words w-full sm:max-w-[80%] ${msg.sender === "user"
+                  className={`relative p-3 rounded-lg whitespace-pre-line break-words w-full sm:max-w-[80%] ${msg.sender === "user"
                     ? "bg-blue-100 text-right rounded-tr-none"
                     : "bg-gray-200 text-left rounded-tl-none"
                     }`}
                 >
-                  {msg.sender === "bot" ? (
-                    <div
-                      className={`p-3 rounded-lg whitespace-pre-line break-words max-w-full sm:max-w-[80%] ${msg.sender === "user"
-                        ? "bg-blue-100 text-right rounded-tr-none"
-                        : "bg-gray-200 text-left rounded-tl-none"
-                        }`}
-                    >
+                  {msg.sender === "bot" && (
+                    <>
+                      <button
+                        onClick={() => handleCopy(msg.text, i)}
+                        title="Copy response"
+                        className="absolute top-1 right-1 p-1 rounded hover:bg-gray-300 focus:outline-none"
+                        aria-label="Copy bot response"
+                        type="button"
+                      >
+                        {/* Clipboard SVG icon */}
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-5 w-5 text-gray-600"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth={2}
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 8h6a2 2 0 002-2v-2a2 2 0 00-2-2h-6a2 2 0 00-2 2v2a2 2 0 002 2z"
+                          />
+                        </svg>
+                      </button>
+
+                      {/* Popup message */}
+                      {copiedMessageIndex === i && (
+                        <div
+                          className="absolute top-8 right-1 bg-green-600 text-white text-xs px-2 py-1 rounded shadow-lg select-none
+                            opacity-100 transition-opacity duration-300"
+                          style={{ zIndex: 1000 }}
+                        >
+                          Copied to clipboard
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  <div
+                    className={`p-3 rounded-lg whitespace-pre-line break-words max-w-full sm:max-w-[80%] ${msg.sender === "user"
+                      ? "bg-blue-100 text-right rounded-tr-none"
+                      : "bg-gray-200 text-left rounded-tl-none"
+                      }`}
+                  >
+                    {msg.sender === "bot" ? (
                       <ReactMarkdown components={markdownComponents}>
                         {msg.text}
                       </ReactMarkdown>
-                    </div>
-                  ) : (
-                    <p className="text-gray-800">{msg.text}</p>
-                  )}
+                    ) : (
+                      <p className="text-gray-800">{msg.text}</p>
+                    )}
+                  </div>
 
                   {msg.resources?.length > 0 && (
                     <ul className="mt-2 text-sm list-disc list-inside">
@@ -177,7 +217,7 @@ export default function ChatbotUI() {
       </div>
 
       {/* Input Bar */}
-      <div className="w-full px-4 py-3 bg-white border-t flex items-center space-x-2">
+      <div className="sticky bottom-0 w-full px-4 py-3 bg-white border-t flex items-center space-x-2 z-10">
         <input
           type="text"
           value={input}
